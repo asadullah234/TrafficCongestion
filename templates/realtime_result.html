@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Traffic Analysis</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --dark-color: #1a1a2e;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.05)" d="M0,0 L100,0 L100,100 L0,100 Z"></path></svg>');
+            background-size: cover;
+            opacity: 0.2;
+        }
+        
+        .junction-card {
+            margin-bottom: 2.5rem;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: white;
+            transition: all 0.3s ease;
+            border-left: 5px solid var(--primary-color);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .junction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .active-junction {
+            border-left: 5px solid var(--success-color);
+            animation: pulseBorder 2s infinite;
+        }
+        
+        @keyframes pulseBorder {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+        
+        .signal-timer {
+            font-size: 2rem;
+            text-align: center;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .signal-timer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+            z-index: 0;
+        }
+        
+        .signal-timer > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .green-light {
+            background: linear-gradient(135deg, var(--success-color), #5cb85c);
+            color: white;
+        }
+        
+        .progress-container {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .progress-animation {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .vehicle-count {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        .congestion-meter {
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+        }
+        
+        .traffic-light-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        
+        .junction-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            margin-right: 1rem;
+            font-weight: bold;
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 0.5rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .back-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .progress-thick {
+            height: 20px;
+            border-radius: 10px;
+        }
+        
+        .progress-bar-animated {
+            animation: progressAnimation 1s linear infinite;
+        }
+        
+        @keyframes progressAnimation {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center animate__animated animate__fadeIn">
+        <div class="container">
+            <h1 class="display-4 mb-3 animate__animated animate__fadeInDown"><i class="fas fa-traffic-light me-2"></i> Real-time Traffic Analysis</h1>
+            <p class="lead animate__animated animate__fadeInUp animate__delay-1s">AI-powered traffic management system</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="progressContainer" class="progress-container text-center animate__animated animate__fadeIn">
+            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h4 class="mb-3">Processing Junction <span id="currentJunction" class="badge bg-primary">1</span></h4>
+            <div class="progress progress-thick">
+                <div id="globalProgress" class="progress-bar progress-bar-striped progress-bar-animated" 
+                     style="width: 0%"></div>
+            </div>
+            <p class="mt-2 text-muted" id="statusText">Initializing analysis...</p>
+        </div>
+        
+        <div id="resultsContainer" class="mb-5">
+            <!-- Results will be inserted here -->
+        </div>
+    </div>
+    
+    <a href="/" class="btn btn-primary back-btn animate__animated animate__fadeInUp animate__delay-2s">
+        <i class="fas fa-arrow-left me-2"></i> Back to Home
+    </a>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script>
+        // Initialize AOS (Animate On Scroll)
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+        
+        let currentJunction = 1;
+        const maxJunctions = 4;
+        let isProcessing = false;
+        
+        // Floating animation for junction cards
+        gsap.utils.toArray(".junction-card").forEach(card => {
+            gsap.to(card, {
+                y: -10,
+                duration: 2,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
+            });
+        });
+        
+        function startAnalysis() {
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('progressContainer').classList.add('progress-animation');
+            isProcessing = true;
+            
+            // Update global progress
+            const globalProgress = ((currentJunction - 1) / maxJunctions) * 100;
+            document.getElementById('globalProgress').style.width = `${globalProgress}%`;
+            document.getElementById('statusText').textContent = `Analyzing traffic patterns for Junction ${currentJunction}...`;
+            
+            // Simulate API call (replace with actual fetch)
+            setTimeout(() => {
+                // Mock data - replace with actual fetch
+                const mockData = {
+                    junction_id: currentJunction,
+                    processed_image: `junction${currentJunction}.jpg`,
+                    total_vehicles: Math.floor(Math.random() * 50) + 10,
+                    congestion_pct: Math.random() * 100,
+                    green_time: Math.floor(Math.random() * 30) + 10,
+                    counts: {
+                        cars: Math.floor(Math.random() * 30) + 5,
+                        trucks: Math.floor(Math.random() * 10) + 1,
+                        bikes: Math.floor(Math.random() * 15) + 3,
+                        buses: Math.floor(Math.random() * 5) + 1
+                    }
+                };
+                
+                // For demo purposes, we're using mock data
+                // In production, you would use:
+                // fetch('/get_realtime_data')
+                //     .then(response => response.json())
+                //     .then(data => {
+                //         displayResult(data);
+                //         // Rest of your code...
+                //     });
+                
+                displayResult(mockData);
+                
+                if (currentJunction <= maxJunctions) {
+                    // Start countdown for this junction's green time
+                    startCountdown(mockData.green_time, () => {
+                        currentJunction++;
+                        if (currentJunction <= maxJunctions) {
+                            document.getElementById('currentJunction').textContent = currentJunction;
+                            document.getElementById('currentJunction').classList.add('animate__animated', 'animate__pulse');
+                            setTimeout(() => {
+                                document.getElementById('currentJunction').classList.remove('animate__animated', 'animate__pulse');
+                            }, 1000);
+                            
+                            // Animate to next junction
+                            gsap.to(window, {
+                                duration: 1,
+                                scrollTo: {
+                                    y: "#resultsContainer",
+                                    offsetY: 20
+                                },
+                                ease: "power2.inOut",
+                                onComplete: startAnalysis
+                            });
+                        } else {
+                            // Analysis complete
+                            document.getElementById('progressContainer').style.display = 'none';
+                            document.getElementById('globalProgress').style.width = '100%';
+                            document.getElementById('statusText').textContent = 'Analysis complete!';
+                            
+                            // Show completion animation
+                            const completion = document.createElement('div');
+                            completion.className = 'alert alert-success text-center animate__animated animate__fadeInUp';
+                            completion.innerHTML = `
+                                <h4><i class="fas fa-check-circle me-2"></i> All junctions processed successfully!</h4>
+                                <p class="mb-0">The system has optimized traffic flow for all monitored intersections.</p>
+                            `;
+                            document.getElementById('resultsContainer').appendChild(completion);
+                            
+                            // Scroll to completion message
+                            gsap.to(window, {
+                                duration: 1,
+                                scrollTo: {
+                                    y: completion,
+                                    offsetY: 100
+                                },
+                                ease: "power2.inOut"
+                            });
+                        }
+                    });
+                }
+            }, 1500); // Simulate processing delay
+        }
+        
+        function displayResult(data) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            const resultCard = document.createElement('div');
+            resultCard.className = `junction-card ${currentJunction === data.junction_id ? 'active-junction' : ''}`;
+            resultCard.setAttribute('data-aos', 'fade-up');
+            resultCard.setAttribute('id', `junction-${data.junction_id}`);
+            
+            // Calculate congestion level
+            const congestionLevel = data.congestion_pct < 50 ? 'success' : 
+                                  data.congestion_pct < 75 ? 'warning' : 'danger';
+            
+            resultCard.innerHTML = `
+                <div class="d-flex align-items-center mb-3">
+                    <span class="junction-number">${data.junction_id}</span>
+                    <h2 class="mb-0">Junction ${data.junction_id} Analysis</h2>
+                </div>
+                
+                <div class="row">
+                    <div class="col-lg-6 mb-4" data-aos="fade-right">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Processed View</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <img src="/uploads/${data.processed_image}" class="img-fluid w-100 rounded-bottom" 
+                                     style="max-height: 300px; object-fit: cover;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4" data-aos="fade-left">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Traffic Statistics</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-${congestionLevel}">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h5 class="mb-1"><i class="fas fa-car me-2"></i>Total Vehicles</h5>
+                                            <h2 class="mb-0">${data.total_vehicles}</h2>
+                                        </div>
+                                        <div class="text-end">
+                                            <h5 class="mb-1"><i class="fas fa-traffic-light me-2"></i>Congestion</h5>
+                                            <h2 class="mb-0">${data.congestion_pct.toFixed(1)}%</h2>
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-3">
+                                        <div class="progress-bar bg-${congestionLevel}" 
+                                             style="width: ${data.congestion_pct}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="signal-timer green-light mb-3" data-aos="zoom-in">
+                                    <p class="mb-1"><i class="fas fa-stopwatch me-2"></i>AI-Powered Signal Timing</p>
+                                    <h3 id="countdown-${data.junction_id}" class="display-4 my-3">${data.green_time}s</h3>
+                                    <div class="progress progress-thick">
+                                        <div id="progress-${data.junction_id}" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                             style="width: 100%"></div>
+                                    </div>
+                                    <small class="text-white-50 mt-2">Optimal green time calculated</small>
+                                </div>
+                                
+                                <div class="vehicle-distribution">
+                                    <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Vehicle Distribution</h5>
+                                    <div class="row">
+                                        ${Object.entries(data.counts).map(([type, count]) => `
+                                            <div class="col-6 mb-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="vehicle-count">
+                                                        <i class="fas fa-${type === 'cars' ? 'car' : 
+                                                                          type === 'trucks' ? 'truck' : 
+                                                                          type === 'bikes' ? 'motorcycle' : 'bus'} me-2"></i>
+                                                        ${type.charAt(0).toUpperCase() + type.slice(1)}
+                                                    </span>
+                                                    <span class="badge bg-primary rounded-pill">${count}</span>
+                                                </div>
+                                                <div class="progress congestion-meter mt-1">
+                                                    <div class="progress-bar" 
+                                                         style="width: ${(count / data.total_vehicles) * 100}%"></div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            resultsContainer.appendChild(resultCard);
+            
+            // Animate the card entrance
+            gsap.from(resultCard, {
+                duration: 1,
+                y: 50,
+                opacity: 0,
+                ease: "back.out(1)"
+            });
+        }
+        
+        function startCountdown(seconds, callback) {
+            let remaining = seconds;
+            const countdownElement = document.getElementById(`countdown-${currentJunction}`);
+            const progressElement = document.getElementById(`progress-${currentJunction}`);
+            
+            // Add pulse animation to active junction
+            const activeCard = document.getElementById(`junction-${currentJunction}`);
+            activeCard.classList.add('animate__animated', 'animate__pulse', 'animate__infinite');
+            
+            const interval = setInterval(() => {
+                remaining--;
+                countdownElement.textContent = `${remaining}s`;
+                progressElement.style.width = `${(remaining / seconds) * 100}%`;
+                
+                // Change color when time is running out
+                if (remaining <= 5) {
+                    countdownElement.classList.add('animate__animated', 'animate__heartBeat');
+                    setTimeout(() => {
+                        countdownElement.classList.remove('animate__animated', 'animate__heartBeat');
+                    }, 1000);
+                }
+                
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    activeCard.classList.remove('animate__animated', 'animate__pulse', 'animate__infinite');
+                    
+                    // Add completion animation
+                    activeCard.classList.add('animate__animated', 'animate__fadeOut');
+                    setTimeout(() => {
+                        activeCard.classList.remove('animate__animated', 'animate__fadeOut', 'active-junction');
+                        activeCard.classList.add('animate__animated', 'animate__fadeIn');
+                    }, 500);
+                    
+                    callback();
+                }
+            }, 1000);
+        }
+        
+        // Start the analysis when page loads
+        window.onload = function() {
+            // Initial animations
+            gsap.from(".header", {
+                duration: 1,
+                y: -100,
+                opacity: 0,
+                ease: "power3.out"
+            });
+            
+            // Start analysis after initial animations
+            setTimeout(startAnalysis, 1000);
+        };
+    </script>
+</body>
+</html>
