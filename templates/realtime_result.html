@@ -4,33 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-time Traffic Analysis</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Animate.css -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- AOS (Animate On Scroll) -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4361ee;
             --secondary-color: #3f37c9;
-            --accent-color: #4cc9f0;
             --success-color: #28a745;
             --warning-color: #ffc107;
             --danger-color: #dc3545;
-            --dark-color: #1a1a2e;
-            --light-color: #f8f9fa;
         }
         
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f5f7fa;
-            color: var(--dark-color);
-            overflow-x: hidden;
         }
         
         .header {
@@ -38,37 +25,15 @@
             color: white;
             padding: 3rem 0;
             margin-bottom: 3rem;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.05)" d="M0,0 L100,0 L100,100 L0,100 Z"></path></svg>');
-            background-size: cover;
-            opacity: 0.2;
         }
         
         .junction-card {
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
             padding: 2rem;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             background: white;
-            transition: all 0.3s ease;
             border-left: 5px solid var(--primary-color);
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .junction-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
         }
         
         .active-junction {
@@ -82,435 +47,694 @@
             100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
         }
         
-        .signal-timer {
-            font-size: 2rem;
+        .upload-zone {
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 3rem;
             text-align: center;
-            padding: 2rem;
+            cursor: pointer;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--primary-color);
+            background: #e9ecef;
+        }
+        
+        .upload-zone.dragover {
+            border-color: var(--success-color);
+            background: #d4edda;
+        }
+        
+        .signal-timer {
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 1.5rem;
             margin: 1.5rem 0;
             border-radius: 12px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .signal-timer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
-            z-index: 0;
-        }
-        
-        .signal-timer > * {
-            position: relative;
-            z-index: 1;
+            color: white;
         }
         
         .green-light {
             background: linear-gradient(135deg, var(--success-color), #5cb85c);
-            color: white;
         }
         
-        .progress-container {
+        .yellow-light {
+            background: linear-gradient(135deg, var(--warning-color), #ffc107);
+            color: black;
+        }
+        
+        .red-light {
+            background: linear-gradient(135deg, var(--danger-color), #dc3545);
+        }
+        
+        .detection-image {
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .vehicle-label {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .countdown-active {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .upload-disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .result-container {
             display: none;
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
         }
         
-        .progress-animation {
-            animation: fadeIn 0.5s ease-out;
+        .active-result {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
         }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        .vehicle-count {
-            font-size: 1.2rem;
-            font-weight: 500;
-        }
-        
-        .congestion-meter {
-            height: 10px;
-            border-radius: 5px;
-            margin-top: 0.5rem;
-        }
-        
-        .traffic-light-icon {
-            font-size: 1.5rem;
-            margin-right: 0.5rem;
-            vertical-align: middle;
-        }
-        
-        .junction-number {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            line-height: 40px;
-            text-align: center;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            margin-right: 1rem;
-            font-weight: bold;
-        }
-        
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-        
-        @keyframes floating {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            padding: 0.5rem 1.5rem;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
-        }
-        
-        .back-btn {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 100;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        
-        .progress-thick {
-            height: 20px;
-            border-radius: 10px;
-        }
-        
-        .progress-bar-animated {
-            animation: progressAnimation 1s linear infinite;
-        }
-        
-        @keyframes progressAnimation {
-            0% { background-position: 0 0; }
-            100% { background-position: 40px 0; }
-        }
     </style>
 </head>
 <body>
-    <div class="header text-center animate__animated animate__fadeIn">
+    <div class="header text-center">
         <div class="container">
-            <h1 class="display-4 mb-3 animate__animated animate__fadeInDown"><i class="fas fa-traffic-light me-2"></i> Real-time Traffic Analysis</h1>
-            <p class="lead animate__animated animate__fadeInUp animate__delay-1s">AI-powered traffic management system</p>
+            <h1 class="display-4 mb-3">
+                <i class="fas fa-traffic-light me-2"></i> 
+                Real-time Traffic Analysis
+            </h1>
+            <p class="lead">AI-powered traffic management system</p>
         </div>
     </div>
     
     <div class="container">
-        <div id="progressContainer" class="progress-container text-center animate__animated animate__fadeIn">
-            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
-                <span class="visually-hidden">Loading...</span>
+        <!-- Progress Container -->
+        <div class="progress-container text-center mb-4 p-4 bg-white rounded shadow-sm">
+            <h4 class="mb-3">Current Junction: <span id="currentJunctionBadge" class="badge bg-primary">1</span></h4>
+            <div class="progress mb-3" style="height: 20px;">
+                <div id="overallProgress" class="progress-bar progress-bar-striped" style="width: 25%"></div>
             </div>
-            <h4 class="mb-3">Processing Junction <span id="currentJunction" class="badge bg-primary">1</span></h4>
-            <div class="progress progress-thick">
-                <div id="globalProgress" class="progress-bar progress-bar-striped progress-bar-animated" 
-                     style="width: 0%"></div>
-            </div>
-            <p class="mt-2 text-muted" id="statusText">Initializing analysis...</p>
+            <p class="text-muted">Upload images for each junction to analyze traffic patterns</p>
         </div>
-        
-        <div id="resultsContainer" class="mb-5">
-            <!-- Results will be inserted here -->
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="junction-card active-junction">
+            <div class="d-flex align-items-center mb-4">
+                <span class="junction-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">1</span>
+                <h2 class="mb-0 ms-3">Junction <span id="currentJunctionTitle">1</span> - Upload Image</h2>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                        <h4>Drop your image here or click to browse</h4>
+                        <p class="text-muted">Supported formats: JPG, PNG, JPEG (Max 16MB)</p>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <button class="btn btn-primary btn-lg" id="uploadBtn" onclick="uploadImage()" disabled>
+                            <i class="fas fa-upload me-2"></i>Analyze Traffic
+                        </button>
+                    </div>
+                    
+                    <div class="loading-spinner text-center mt-4" id="loadingSpinner" style="display: none;">
+                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+                        <p class="mt-2">Analyzing traffic patterns...</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Instructions</h5>
+                        </div>
+                        <div class="card-body">
+                            <ol class="mb-3">
+                                <li class="mb-2">Upload an image of the current junction</li>
+                                <li class="mb-2">Wait for AI analysis to complete</li>
+                                <li class="mb-2">Review traffic light timing</li>
+                                <li>Proceed to next junction when timer ends</li>
+                            </ol>
+                            <div class="alert alert-info">
+                                <small><strong>Tip:</strong> Clear images with good lighting provide better analysis results.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="resultsContainer" class="mt-4">
+            <div id="result-junction-1" class="result-container"></div>
+            <div id="result-junction-2" class="result-container"></div>
+            <div id="result-junction-3" class="result-container"></div>
+            <div id="result-junction-4" class="result-container"></div>
         </div>
     </div>
     
-    <a href="/" class="btn btn-primary back-btn animate__animated animate__fadeInUp animate__delay-2s">
+    <a href="/" class="btn btn-primary btn-lg position-fixed" style="bottom: 2rem; right: 2rem; z-index: 100; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">
         <i class="fas fa-arrow-left me-2"></i> Back to Home
     </a>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
     <script>
-        // Initialize AOS (Animate On Scroll)
-        AOS.init({
-            duration: 800,
-            easing: 'ease-in-out',
-            once: true
+        // Global variables
+      // Global variables
+// Global variables
+// Global variables
+let currentJunction = 1;
+const maxJunctions = 4;
+let selectedFile = null;
+let analysisResults = [];
+let countdownInterval = null;
+let canUpload = true;
+let realtimeActive = false;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRealtimeAnalysis();
+    setupEventListeners();
+});
+
+// Initialize real-time analysis session
+async function initializeRealtimeAnalysis() {
+    try {
+        // Reset the real-time analysis session
+        const response = await fetch('/reset_realtime_analysis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
         
-        let currentJunction = 1;
-        const maxJunctions = 4;
-        let isProcessing = false;
-        
-        // Floating animation for junction cards
-        gsap.utils.toArray(".junction-card").forEach(card => {
-            gsap.to(card, {
-                y: -10,
-                duration: 2,
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut"
-            });
-        });
-        
-        function startAnalysis() {
-            document.getElementById('progressContainer').style.display = 'block';
-            document.getElementById('progressContainer').classList.add('progress-animation');
-            isProcessing = true;
-            
-            // Update global progress
-            const globalProgress = ((currentJunction - 1) / maxJunctions) * 100;
-            document.getElementById('globalProgress').style.width = `${globalProgress}%`;
-            document.getElementById('statusText').textContent = `Analyzing traffic patterns for Junction ${currentJunction}...`;
-            
-            // Simulate API call (replace with actual fetch)
-            setTimeout(() => {
-                // Mock data - replace with actual fetch
-                const mockData = {
-                    junction_id: currentJunction,
-                    processed_image: `junction${currentJunction}.jpg`,
-                    total_vehicles: Math.floor(Math.random() * 50) + 10,
-                    congestion_pct: Math.random() * 100,
-                    green_time: Math.floor(Math.random() * 30) + 10,
-                    counts: {
-                        cars: Math.floor(Math.random() * 30) + 5,
-                        trucks: Math.floor(Math.random() * 10) + 1,
-                        bikes: Math.floor(Math.random() * 15) + 3,
-                        buses: Math.floor(Math.random() * 5) + 1
-                    }
-                };
-                
-                // For demo purposes, we're using mock data
-                // In production, you would use:
-                // fetch('/get_realtime_data')
-                //     .then(response => response.json())
-                //     .then(data => {
-                //         displayResult(data);
-                //         // Rest of your code...
-                //     });
-                
-                displayResult(mockData);
-                
-                if (currentJunction <= maxJunctions) {
-                    // Start countdown for this junction's green time
-                    startCountdown(mockData.green_time, () => {
-                        currentJunction++;
-                        if (currentJunction <= maxJunctions) {
-                            document.getElementById('currentJunction').textContent = currentJunction;
-                            document.getElementById('currentJunction').classList.add('animate__animated', 'animate__pulse');
-                            setTimeout(() => {
-                                document.getElementById('currentJunction').classList.remove('animate__animated', 'animate__pulse');
-                            }, 1000);
-                            
-                            // Animate to next junction
-                            gsap.to(window, {
-                                duration: 1,
-                                scrollTo: {
-                                    y: "#resultsContainer",
-                                    offsetY: 20
-                                },
-                                ease: "power2.inOut",
-                                onComplete: startAnalysis
-                            });
-                        } else {
-                            // Analysis complete
-                            document.getElementById('progressContainer').style.display = 'none';
-                            document.getElementById('globalProgress').style.width = '100%';
-                            document.getElementById('statusText').textContent = 'Analysis complete!';
-                            
-                            // Show completion animation
-                            const completion = document.createElement('div');
-                            completion.className = 'alert alert-success text-center animate__animated animate__fadeInUp';
-                            completion.innerHTML = `
-                                <h4><i class="fas fa-check-circle me-2"></i> All junctions processed successfully!</h4>
-                                <p class="mb-0">The system has optimized traffic flow for all monitored intersections.</p>
-                            `;
-                            document.getElementById('resultsContainer').appendChild(completion);
-                            
-                            // Scroll to completion message
-                            gsap.to(window, {
-                                duration: 1,
-                                scrollTo: {
-                                    y: completion,
-                                    offsetY: 100
-                                },
-                                ease: "power2.inOut"
-                            });
-                        }
-                    });
-                }
-            }, 1500); // Simulate processing delay
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Analysis session initialized:', data.message);
+            checkStatus();
+        } else {
+            console.error('Failed to initialize analysis session');
         }
+    } catch (error) {
+        console.error('Error initializing analysis:', error);
+        checkStatus(); // Fallback to checking current status
+    }
+}
+
+// Check current status from server
+async function checkStatus() {
+    try {
+        const response = await fetch('/get_current_status');
+        const data = await response.json();
+        currentJunction = data.current_junction;
+        realtimeActive = data.realtime_active;
+        canUpload = data.can_upload;
+        updateUI();
+        updateProgress();
+    } catch (error) {
+        console.error('Error checking status:', error);
+        // Set default values if server is unreachable
+        currentJunction = 1;
+        realtimeActive = true;
+        canUpload = true;
+        updateUI();
+    }
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    const imageInput = document.getElementById('imageInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadZone = document.getElementById('uploadZone');
+    
+    if (imageInput) {
+        imageInput.addEventListener('change', handleFileSelect);
+    }
+    
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', uploadImage);
+    }
+    
+    // Add drag and drop functionality
+    if (uploadZone) {
+        uploadZone.addEventListener('dragover', handleDragOver);
+        uploadZone.addEventListener('dragleave', handleDragLeave);
+        uploadZone.addEventListener('drop', handleDrop);
+    }
+}
+
+// Handle drag over
+function handleDragOver(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('dragover');
+}
+
+// Handle drag leave
+function handleDragLeave(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('dragover');
+}
+
+// Handle drop
+function handleDrop(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('dragover');
+    
+    const files = event.dataTransfer.files;
+    if (files.length > 0 && allowedFile(files[0].name)) {
+        selectedFile = files[0];
+        displaySelectedFile(files[0]);
+    }
+}
+
+// Handle file selection
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file && allowedFile(file.name)) {
+        selectedFile = file;
+        displaySelectedFile(file);
+    } else if (file) {
+        alert('Please select a valid image file (JPG, PNG, JPEG)');
+    }
+}
+
+// Display selected file
+function displaySelectedFile(file) {
+    const uploadZone = document.getElementById('uploadZone');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        uploadZone.innerHTML = `
+            <img src="${e.target.result}" class="detection-image mb-3" style="max-height: 200px;">
+            <p class="text-success mb-1"><i class="fas fa-check-circle me-2"></i>${file.name}</p>
+            <p class="text-muted">Ready to analyze Junction ${currentJunction}</p>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        `;
         
-        function displayResult(data) {
-            const resultsContainer = document.getElementById('resultsContainer');
+        // Re-add event listener to new input
+        document.getElementById('imageInput').addEventListener('change', handleFileSelect);
+        uploadBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+}
+
+// Check if file is allowed
+function allowedFile(filename) {
+    const allowed = ['jpg', 'jpeg', 'png'];
+    const ext = filename.split('.').pop().toLowerCase();
+    return allowed.includes(ext);
+}
+
+// Upload and analyze image
+async function uploadImage() {
+    if (!selectedFile || !canUpload) {
+        console.log('Upload blocked: selectedFile=', !!selectedFile, 'canUpload=', canUpload);
+        return;
+    }
+
+    const uploadBtn = document.getElementById('uploadBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    
+    // Show loading state
+    uploadBtn.disabled = true;
+    loadingSpinner.style.display = 'block';
+    canUpload = false;
+    updateUI();
+
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    formData.append('junction_id', currentJunction);
+
+    try {
+        // Use the upload_junction_image endpoint which matches your Flask app
+        const response = await fetch('/upload_junction_image', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            console.log('Analysis successful for junction', currentJunction);
+            displayAnalysisResult(result);
+            startSignalCountdown(result.green_time);
+        } else {
+            throw new Error(result.error || 'Analysis failed');
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert('Error analyzing image: ' + error.message);
+        resetUploadSection();
+    } finally {
+        loadingSpinner.style.display = 'none';
+    }
+}
+
+// Display analysis results
+function displayAnalysisResult(data) {
+    const resultContainer = document.getElementById(`result-junction-${data.junction_id}`);
+    const congestionLevel = data.congestion_pct < 50 ? 'success' : 
+                          data.congestion_pct < 75 ? 'warning' : 'danger';
+
+    resultContainer.className = 'result-container active-result';
+    resultContainer.innerHTML = `
+        <div class="junction-card">
+            <div class="d-flex align-items-center mb-3">
+                <span class="junction-number bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+                      style="width: 40px; height: 40px;">${data.junction_id}</span>
+                <h2 class="mb-0 ms-3">Junction ${data.junction_id} Analysis Results</h2>
+                <span class="badge bg-success ms-auto">Analyzed at ${data.analysis_time_formatted || new Date().toLocaleString()}</span>
+            </div>
             
-            const resultCard = document.createElement('div');
-            resultCard.className = `junction-card ${currentJunction === data.junction_id ? 'active-junction' : ''}`;
-            resultCard.setAttribute('data-aos', 'fade-up');
-            resultCard.setAttribute('id', `junction-${data.junction_id}`);
-            
-            // Calculate congestion level
-            const congestionLevel = data.congestion_pct < 50 ? 'success' : 
-                                  data.congestion_pct < 75 ? 'warning' : 'danger';
-            
-            resultCard.innerHTML = `
-                <div class="d-flex align-items-center mb-3">
-                    <span class="junction-number">${data.junction_id}</span>
-                    <h2 class="mb-0">Junction ${data.junction_id} Analysis</h2>
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Processed Image</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <img src="/uploads/${data.processed_image}" class="detection-image w-100" alt="Processed traffic image">
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="row">
-                    <div class="col-lg-6 mb-4" data-aos="fade-right">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Processed View</h5>
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Traffic Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-${congestionLevel} mb-4">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <h3 class="mb-1">${data.total_vehicles}</h3>
+                                        <small>Total Vehicles</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h3 class="mb-1">${data.congestion_pct.toFixed(1)}%</h3>
+                                        <small>Congestion</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h3 class="mb-1">${data.green_time}s</h3>
+                                        <small>Green Time</small>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body p-0">
-                                <img src="/uploads/${data.processed_image}" class="img-fluid w-100 rounded-bottom" 
-                                     style="max-height: 300px; object-fit: cover;">
+                            
+                            <div class="signal-timer green-light countdown-active" id="signalTimer-${data.junction_id}">
+                                <h2 id="countdownDisplay-${data.junction_id}" class="display-4 mb-2">${data.green_time}s</h2>
+                                <div class="progress" style="height: 10px;">
+                                    <div id="countdownProgress-${data.junction_id}" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         style="width: 100%"></div>
+                                </div>
+                                <p class="mt-2 mb-0"><i class="fas fa-traffic-light me-2"></i>Green Light Active</p>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h5><i class="fas fa-car me-2"></i>Vehicle Counts</h5>
+                                <div class="row">
+                                    ${generateVehicleCountsHTML(data.counts)}
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-lg-6 mb-4" data-aos="fade-left">
-                        <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Traffic Statistics</h5>
-                            </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Hide upload section
+    document.getElementById('uploadSection').style.display = 'none';
+    
+    // Scroll to results
+    setTimeout(() => {
+        resultContainer.scrollIntoView({ behavior: 'smooth' });
+    }, 300);
+}
+
+// Generate vehicle counts HTML
+function generateVehicleCountsHTML(counts) {
+    return Object.entries(counts).map(([type, count]) => `
+        <div class="col-6 mb-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="vehicle-label">
+                    <i class="fas fa-${getVehicleIcon(type)} me-2"></i>
+                    ${type.charAt(0).toUpperCase() + type.slice(1)}
+                </span>
+                <span class="badge bg-primary rounded-pill">${count}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Get vehicle icon
+function getVehicleIcon(vehicleType) {
+    const icons = {
+        'car': 'car',
+        'bus': 'bus',
+        'truck': 'truck',
+        'bike': 'motorcycle',
+        'rickshaw': 'motorcycle',
+        'pickup': 'truck-pickup'
+    };
+    return icons[vehicleType.toLowerCase()] || 'car';
+}
+
+// Complete current junction
+async function completeCurrentJunction() {
+    try {
+        // Update junction status on server
+        const response = await fetch('/update_junction_status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                next_junction: currentJunction + 1
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            currentJunction = data.current_junction;
+            
+            if (currentJunction <= maxJunctions) {
+                updateProgress();
+                prepareNextJunction();
+            } else {
+                realtimeActive = false;
+                showCompletionMessage();
+            }
+        } else {
+            console.error('Failed to update junction status');
+        }
+    } catch (error) {
+        console.error('Error completing junction:', error);
+    }
+}
+
+// Prepare next junction
+function prepareNextJunction() {
+    // Reset upload section
+    resetUploadSection();
+    
+    // Update UI
+    canUpload = true;
+    updateUI();
+    
+    // Scroll to upload section
+    setTimeout(() => {
+        document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+    }, 1000);
+}
+
+// Reset upload section
+function resetUploadSection() {
+    const uploadZone = document.getElementById('uploadZone');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    uploadZone.innerHTML = `
+        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+        <h4>Drop your image here or click to browse</h4>
+        <p class="text-muted">Supported formats: JPG, PNG, JPEG (Max 16MB)</p>
+        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+    `;
+    
+    // Re-setup event listeners
+    setupEventListeners();
+    
+    // Reset state
+    uploadBtn.disabled = true;
+    selectedFile = null;
+    document.getElementById('uploadSection').style.display = 'block';
+}
+
+// Show completion message
+function showCompletionMessage() {
+    const completionHTML = `
+        <div class="junction-card text-center">
+            <div class="alert alert-success">
+                <h2 class="mb-3"><i class="fas fa-check-circle me-2 text-success"></i>Analysis Complete!</h2>
+                <p class="lead mb-4">All ${maxJunctions} junctions have been analyzed successfully.</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div class="card border-success">
                             <div class="card-body">
-                                <div class="alert alert-${congestionLevel}">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h5 class="mb-1"><i class="fas fa-car me-2"></i>Total Vehicles</h5>
-                                            <h2 class="mb-0">${data.total_vehicles}</h2>
-                                        </div>
-                                        <div class="text-end">
-                                            <h5 class="mb-1"><i class="fas fa-traffic-light me-2"></i>Congestion</h5>
-                                            <h2 class="mb-0">${data.congestion_pct.toFixed(1)}%</h2>
-                                        </div>
-                                    </div>
-                                    <div class="progress mt-3">
-                                        <div class="progress-bar bg-${congestionLevel}" 
-                                             style="width: ${data.congestion_pct}%"></div>
-                                    </div>
-                                </div>
-                                
-                                <div class="signal-timer green-light mb-3" data-aos="zoom-in">
-                                    <p class="mb-1"><i class="fas fa-stopwatch me-2"></i>AI-Powered Signal Timing</p>
-                                    <h3 id="countdown-${data.junction_id}" class="display-4 my-3">${data.green_time}s</h3>
-                                    <div class="progress progress-thick">
-                                        <div id="progress-${data.junction_id}" class="progress-bar progress-bar-striped progress-bar-animated" 
-                                             style="width: 100%"></div>
-                                    </div>
-                                    <small class="text-white-50 mt-2">Optimal green time calculated</small>
-                                </div>
-                                
-                                <div class="vehicle-distribution">
-                                    <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Vehicle Distribution</h5>
-                                    <div class="row">
-                                        ${Object.entries(data.counts).map(([type, count]) => `
-                                            <div class="col-6 mb-2">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span class="vehicle-count">
-                                                        <i class="fas fa-${type === 'cars' ? 'car' : 
-                                                                          type === 'trucks' ? 'truck' : 
-                                                                          type === 'bikes' ? 'motorcycle' : 'bus'} me-2"></i>
-                                                        ${type.charAt(0).toUpperCase() + type.slice(1)}
-                                                    </span>
-                                                    <span class="badge bg-primary rounded-pill">${count}</span>
-                                                </div>
-                                                <div class="progress congestion-meter mt-1">
-                                                    <div class="progress-bar" 
-                                                         style="width: ${(count / data.total_vehicles) * 100}%"></div>
-                                                </div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
+                                <h5 class="card-title text-success">Session Summary</h5>
+                                <p class="card-text">
+                                    <strong>Junctions Analyzed:</strong> ${maxJunctions}<br>
+                                    <strong>Analysis Time:</strong> ${new Date().toLocaleString()}
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
-            `;
-            
-            resultsContainer.appendChild(resultCard);
-            
-            // Animate the card entrance
-            gsap.from(resultCard, {
-                duration: 1,
-                y: 50,
-                opacity: 0,
-                ease: "back.out(1)"
-            });
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-lg me-3" onclick="location.reload()">
+                        <i class="fas fa-redo me-2"></i>Start New Analysis
+                    </button>
+                    <a href="/" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('resultsContainer').insertAdjacentHTML('beforeend', completionHTML);
+    document.getElementById('uploadSection').style.display = 'none';
+}
+
+// Update progress bar
+function updateProgress() {
+    const progress = Math.min(((currentJunction - 1) / maxJunctions) * 100, 100);
+    const progressBar = document.getElementById('overallProgress');
+    const badge = document.getElementById('currentJunctionBadge');
+    
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+        progressBar.textContent = `${Math.round(progress)}%`;
+    }
+    
+    if (badge) {
+        badge.textContent = currentJunction > maxJunctions ? 'Complete' : currentJunction;
+        badge.className = currentJunction > maxJunctions ? 'badge bg-success' : 'badge bg-primary';
+    }
+}
+
+// Update UI based on current state
+function updateUI() {
+    const uploadSection = document.getElementById('uploadSection');
+    const currentJunctionTitle = document.getElementById('currentJunctionTitle');
+    const currentJunctionBadge = document.getElementById('currentJunctionBadge');
+    
+    if (currentJunctionTitle) {
+        currentJunctionTitle.textContent = currentJunction > maxJunctions ? 'Complete' : currentJunction;
+    }
+    
+    if (currentJunctionBadge) {
+        currentJunctionBadge.textContent = currentJunction > maxJunctions ? 'Complete' : currentJunction;
+        currentJunctionBadge.className = currentJunction > maxJunctions ? 'badge bg-success' : 'badge bg-primary';
+    }
+    
+    // Update junction number in upload section
+    const junctionNumber = uploadSection?.querySelector('.junction-number');
+    if (junctionNumber && currentJunction <= maxJunctions) {
+        junctionNumber.textContent = currentJunction;
+    }
+    
+    // Enable/disable upload section based on state
+    if (uploadSection) {
+        if (canUpload && realtimeActive && currentJunction <= maxJunctions) {
+            uploadSection.classList.remove('upload-disabled');
+        } else {
+            uploadSection.classList.add('upload-disabled');
         }
-        
-        function startCountdown(seconds, callback) {
-            let remaining = seconds;
-            const countdownElement = document.getElementById(`countdown-${currentJunction}`);
-            const progressElement = document.getElementById(`progress-${currentJunction}`);
+    }
+}
+
+// Start signal countdown
+function startSignalCountdown(seconds) {
+    let timeLeft = seconds;
+    const junctionId = currentJunction;
+    const timerElement = document.getElementById(`signalTimer-${junctionId}`);
+    const displayElement = document.getElementById(`countdownDisplay-${junctionId}`);
+    const progressElement = document.getElementById(`countdownProgress-${junctionId}`);
+
+    if (!timerElement || !displayElement || !progressElement) {
+        console.error('Timer elements not found for junction', junctionId);
+        return;
+    }
+
+    // Clear any existing countdown
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+
+    countdownInterval = setInterval(() => {
+        timeLeft--;
+        displayElement.textContent = `${timeLeft}s`;
+        progressElement.style.width = `${(timeLeft / seconds) * 100}%`;
+
+        // Update signal state
+        if (timeLeft <= 5 && timeLeft > 0) {
+            timerElement.className = 'signal-timer yellow-light countdown-active';
+            timerElement.querySelector('p').innerHTML = '<i class="fas fa-traffic-light me-2"></i>Yellow Light - Prepare to stop';
+        }
+
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            timerElement.className = 'signal-timer red-light';
+            timerElement.querySelector('p').innerHTML = '<i class="fas fa-traffic-light me-2"></i>Red Light - Stop';
+            displayElement.textContent = '0s';
+            progressElement.style.width = '0%';
             
-            // Add pulse animation to active junction
-            const activeCard = document.getElementById(`junction-${currentJunction}`);
-            activeCard.classList.add('animate__animated', 'animate__pulse', 'animate__infinite');
-            
-            const interval = setInterval(() => {
-                remaining--;
-                countdownElement.textContent = `${remaining}s`;
-                progressElement.style.width = `${(remaining / seconds) * 100}%`;
-                
-                // Change color when time is running out
-                if (remaining <= 5) {
-                    countdownElement.classList.add('animate__animated', 'animate__heartBeat');
-                    setTimeout(() => {
-                        countdownElement.classList.remove('animate__animated', 'animate__heartBeat');
-                    }, 1000);
-                }
-                
-                if (remaining <= 0) {
-                    clearInterval(interval);
-                    activeCard.classList.remove('animate__animated', 'animate__pulse', 'animate__infinite');
-                    
-                    // Add completion animation
-                    activeCard.classList.add('animate__animated', 'animate__fadeOut');
-                    setTimeout(() => {
-                        activeCard.classList.remove('animate__animated', 'animate__fadeOut', 'active-junction');
-                        activeCard.classList.add('animate__animated', 'animate__fadeIn');
-                    }, 500);
-                    
-                    callback();
-                }
+            // Complete current junction after a short delay
+            setTimeout(() => {
+                completeCurrentJunction();
             }, 1000);
         }
-        
-        // Start the analysis when page loads
-        window.onload = function() {
-            // Initial animations
-            gsap.from(".header", {
-                duration: 1,
-                y: -100,
-                opacity: 0,
-                ease: "power3.out"
-            });
-            
-            // Start analysis after initial animations
-            setTimeout(startAnalysis, 1000);
-        };
+    }, 1000);
+}
+
+// Utility function to check server connectivity
+async function checkServerConnectivity() {
+    try {
+        const response = await fetch('/api/traffic_summary');
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+}
+
+// Auto-refresh status periodically (optional)
+setInterval(async () => {
+    if (realtimeActive && currentJunction <= maxJunctions) {
+        const isConnected = await checkServerConnectivity();
+        if (!isConnected) {
+            console.warn('Server connection lost');
+        }
+    }
+}, 30000); // Check every 30 seconds
+
     </script>
 </body>
 </html>
